@@ -32,7 +32,6 @@ def handler_message(message):
 
 @bot.message_handler(content_types=['text','photo','location'],func = lambda message:get_state(message) == title)
 def handler_pribav(message):
-    print('Это' , message.chat.id)
     if message.photo or message.location:
         bot.send_message(message.chat.id, 'Я вас не понимаю. Укажите название места.')
     else:
