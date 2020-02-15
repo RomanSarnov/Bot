@@ -7,15 +7,15 @@ import psycopg2
 
 DATABASE_URL = os.environ['DATABASE_URL']
 
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+con = psycopg2.connect(DATABASE_URL, sslmode='require', cursor_factory=DictCursor)
 
 start,title,location,location_text,photo,stop,vivod= range(7)
 from collections import defaultdict
 user_state = defaultdict(lambda :start)
 text_state = defaultdict(lambda :start)
 data = {'users':{}}
-con = pymysql.connect('localhost', 'root',
-                      'roman', 'bot',cursorclass=pymysql.cursors.DictCursor)
+# con = pymysql.connect('localhost', 'root',
+#                       'roman', 'bot',cursorclass=pymysql.cursors.DictCursor)
 token = '1065495049:AAEcREziu5RwO94qtk46kb-kgeaKWA2LrJ4'
 bot = telebot.TeleBot(token)
 
