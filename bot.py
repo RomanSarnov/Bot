@@ -4,7 +4,7 @@ import pymysql.cursors
 from telebot import types
 import os
 import psycopg2
-
+from psycopg2.extras import DictCursor
 DATABASE_URL = os.environ['DATABASE_URL']
 
 con = psycopg2.connect(DATABASE_URL, sslmode='require', cursor_factory=DictCursor)
@@ -75,9 +75,9 @@ def handler_consent(message):
                 bot.send_message(message.chat.id,'Прикрепите фотографию.')
                 update_state(message, photo)
             elif 'нет' in message.text.lower() or 'не' in message.text.lower():
-                with con:
-                    cur = con.cursor()
-                    cur.execute("INSERT INTO address(title,latitude,longitude,users) VALUES ('%s','%s','%s','%s')"%(data['users'][str(message.chat.id)]['title'],data['users'][str(message.chat.id)]['latitude'],data['users'][str(message.chat.id)]['longitude'],int(message.chat.id)))
+
+                cur = con.cursor()
+                cur.execute("INSERT INTO address(title,latitude,longitude,users) VALUES ('%s','%s','%s','%s')"%(data['users'][str(message.chat.id)]['title'],data['users'][str(message.chat.id)]['latitude'],data['users'][str(message.chat.id)]['longitude'],int(message.chat.id)))
                 bot.send_message(message.chat.id, 'Место сохранено!')
                 update_state(message, start)
             else:
@@ -87,9 +87,8 @@ def handler_consent(message):
 def handler_consent(message):
     data['users'][str(message.chat.id)]['img']=message.photo[0].file_id
     bot.send_message(message.chat.id, 'Место сохранено!')
-    with con:
-        cur = con.cursor()
-        cur.execute("INSERT INTO address(title,latitude,longitude,img,users) VALUES ('%s','%s','%s','%s','%s')"%(data['users'][str(message.chat.id)]['title'],data['users'][str(message.chat.id)]['latitude'],data['users'][str(message.chat.id)]['longitude'],data['users'][str(message.chat.id)]['img'],int(message.chat.id)))
+    cur = con.cursor()
+    cur.execute("INSERT INTO address(title,latitude,longitude,img,users) VALUES ('%s','%s','%s','%s','%s')"%(data['users'][str(message.chat.id)]['title'],data['users'][str(message.chat.id)]['latitude'],data['users'][str(message.chat.id)]['longitude'],data['users'][str(message.chat.id)]['img'],int(message.chat.id)))
     update_state(message, start)
 
 @bot.message_handler(content_types=['text','location'],func = lambda message:get_state(message) == photo)
@@ -104,34 +103,33 @@ def handler_consent(message):
             bot.send_message(message.chat.id, 'Я вас не понимаю. Прикрепите фотографию.')
 @bot.message_handler(commands=['list'],content_types=['text'],func = lambda message:get_state(message) == start)
 def handler_list(message):
-    with con:
-        cur = con.cursor()
-        cur.execute('SELECT title, latitude, longitude, img from address where users = %s LIMIT 10'%(message.chat.id))
-        re = cur.fetchall()
-        if re:
-            for index,elem in enumerate(re):
-                name = elem['title']
-                lat = elem['latitude']
-                lon = elem['longitude']
-                img = elem['img']
-                if img:
-                    bot.send_message(message.chat.id,text=f'{str(index+1)}. {name}')
-                    bot.send_location(message.chat.id,latitude=lat,longitude=lon)
-                    bot.send_photo(message.chat.id,photo=img)
-                else:
-                    bot.send_message(message.chat.id, text=f'{str(index + 1)}. {name}')
-                    bot.send_location(message.chat.id, latitude=lat, longitude=lon)
+    cur = con.cursor()
+    cur.execute('SELECT title, latitude, longitude, img from address where users = %s LIMIT 10'%(message.chat.id))
+    re = cur.fetchall()
+    if re:
+        for index,elem in enumerate(re):
+            name = elem['title']
+            lat = elem['latitude']
+            lon = elem['longitude']
+            img = elem['img']
+            if img:
+                bot.send_message(message.chat.id,text=f'{str(index+1)}. {name}')
+                bot.send_location(message.chat.id,latitude=lat,longitude=lon)
+                bot.send_photo(message.chat.id,photo=img)
+            else:
+                bot.send_message(message.chat.id, text=f'{str(index + 1)}. {name}')
+                bot.send_location(message.chat.id, latitude=lat, longitude=lon)
 
-        else:
-            bot.send_message(message.chat.id, text="У вас нет сохранённых мест.")
+    else:
+        bot.send_message(message.chat.id, text="У вас нет сохранённых мест.")
 
 
 @bot.message_handler(commands=['reset'],content_types=['text'],func = lambda message:get_state(message) == start)
 def handler_list(message):
-    with con:
-        cur = con.cursor()
-        cur.execute('SELECT title, latitude, longitude, img from address where users = %s LIMIT 10'%(message.chat.id))
-        re = cur.fetchall()
+
+    cur = con.cursor()
+    cur.execute('SELECT title, latitude, longitude, img from address where users = %s LIMIT 10'%(message.chat.id))
+    re = cur.fetchall()
     if re:
         bot.send_message(message.chat.id, text='Удалить сохранённые места?')
         update_text(message,stop)
@@ -143,9 +141,8 @@ def handler_reset_sogl(message):
     if 'да' in message.text.lower():
         bot.send_message(message.chat.id, text='Места удалены.')
         update_text(message, start)
-        with con:
-            cur = con.cursor()
-            cur.execute(
+        cur = con.cursor()
+        cur.execute(
                 'DELETE FROM address WHERE users = %s' % (message.chat.id))
     elif 'нет' in message.text.lower():
         bot.send_message(message.chat.id, text='Удаление отменено.')
@@ -159,29 +156,29 @@ def handler_message(message):
 
 @bot.message_handler(content_types=['text'],func = lambda message:get_text_state(message) == vivod)
 def handler_message(message):
-    with con:
-        cur = con.cursor()
-        cur.execute(
-            f"select * FROM address WHERE title = '{message.text}' and users = {message.chat.id};")
-        re = cur.fetchall()
-        if re:
-            for index, elem in enumerate(re):
-                name = elem['title']
-                lat = elem['latitude']
-                lon = elem['longitude']
-                img = elem['img']
-                update_text(message, start)
-                if img:
-                    bot.send_message(message.chat.id, text=f'{str(index + 1)}. {name}')
-                    bot.send_location(message.chat.id, latitude=lat, longitude=lon)
-                    bot.send_photo(message.chat.id, photo=img)
-                else:
-                    bot.send_message(message.chat.id, text=f'{str(index + 1)}. {name}')
-                    bot.send_location(message.chat.id, latitude=lat, longitude=lon)
 
-        else:
+    cur = con.cursor()
+    cur.execute(
+        f"select * FROM address WHERE title = '{message.text}' and users = {message.chat.id};")
+    re = cur.fetchall()
+    if re:
+        for index, elem in enumerate(re):
+            name = elem['title']
+            lat = elem['latitude']
+            lon = elem['longitude']
+            img = elem['img']
             update_text(message, start)
-            bot.send_message(message.chat.id, text="У вас нет сохранённых мест с данным названием.")
+            if img:
+                bot.send_message(message.chat.id, text=f'{str(index + 1)}. {name}')
+                bot.send_location(message.chat.id, latitude=lat, longitude=lon)
+                bot.send_photo(message.chat.id, photo=img)
+            else:
+                bot.send_message(message.chat.id, text=f'{str(index + 1)}. {name}')
+                bot.send_location(message.chat.id, latitude=lat, longitude=lon)
+
+    else:
+        update_text(message, start)
+        bot.send_message(message.chat.id, text="У вас нет сохранённых мест с данным названием.")
 
 
 
