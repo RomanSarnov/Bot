@@ -7,15 +7,13 @@ DATABASE_URL = os.environ['DATABASE_URL']
 
 con = psycopg2.connect(DATABASE_URL, sslmode='require', cursor_factory=DictCursor)
 cur = con.cursor()
-cur.execute("""CREATE TABLE address
-            (
+cur.execute("""CREATE TABLE address(
                 Id SERIAL PRIMARY KEY, 
                 title VARCHAR(60), 
                 latitude REAL, 
                 longitude REAL, 
                 img VARCHAR(150), 
-                users INTEGER(60)
-            )"""
+                users INTEGER)"""
             )
 start,title,location,location_text,photo,stop,vivod= range(7)
 from collections import defaultdict
