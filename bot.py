@@ -147,9 +147,10 @@ def handler_reset_sogl(message):
         bot.send_message(message.chat.id, text='Места удалены.')
         update_text(message, start)
         cur = con.cursor()
-        cur.execute('DELETE FROM address WHERE users = %s' % (message.chat.id))
+        cur.execute('DELETE FROM address WHERE users = %s;' % (message.chat.id))
     elif 'нет' in message.text.lower():
         bot.send_message(message.chat.id, text='Удаление отменено.')
+        update_text(message, start)
     else:
         bot.send_message(message.chat.id, text='Я вас не понимаю. Удалить сохранённые места?')
 
