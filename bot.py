@@ -126,7 +126,7 @@ def handler_list(message):
 def handler_list(message):
 
     cur = con.cursor()
-    cur.execute('SELECT title, latitude, longitude, img from address where users = %s LIMIT 10'%(message.chat.id))
+    cur.execute('SELECT title, latitude, longitude, img from address where users = %s'%(message.chat.id))
     re = cur.fetchall()
     if re:
         bot.send_message(message.chat.id, text='Удалить сохранённые места?')
