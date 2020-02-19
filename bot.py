@@ -7,7 +7,7 @@ DATABASE_URL = os.environ['DATABASE_URL']
 
 con = psycopg2.connect(DATABASE_URL, sslmode='require', cursor_factory=DictCursor)
 cur = con.cursor()
-cur.execute('CREATE TABLE address(Id SERIAL PRIMARY KEY, title VARCHAR(60), latitude REAL, longitude REAL, img VARCHAR(150), users INT);')
+cur.execute('CREATE TABLE address(Id SERIAL PRIMARY KEY, title VARCHAR(60), latitude REAL, longitude REAL, img VARCHAR(150), users VARCHAR(60);')
 start,title,location,location_text,photo,stop,vivod= range(7)
 from collections import defaultdict
 user_state = defaultdict(lambda :start)
@@ -140,8 +140,7 @@ def handler_reset_sogl(message):
         bot.send_message(message.chat.id, text='Места удалены.')
         update_text(message, start)
         cur = con.cursor()
-        cur.execute(
-                'DELETE FROM address WHERE users = %s' % (message.chat.id))
+        cur.execute('DELETE FROM address WHERE users = %s' % (message.chat.id))
     elif 'нет' in message.text.lower():
         bot.send_message(message.chat.id, text='Удаление отменено.')
     else:
