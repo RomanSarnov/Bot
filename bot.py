@@ -14,7 +14,7 @@ cur.execute("""CREATE TABLE address
                 latitude REAL, 
                 longitude REAL, 
                 img VARCHAR(150), 
-                users VARCHAR(60)
+                users INT(60)
             )"""
             )
 start,title,location,location_text,photo,stop,vivod= range(7)
